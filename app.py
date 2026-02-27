@@ -56,28 +56,26 @@ Code to debug and review:
 
 
 FREE_MODELS = [
-    # Coding-specialist models (try first — best for code review)
-    "qwen/qwen3-coder:free",
-    "qwen/qwen-2.5-coder-32b-instruct:free",
-    "openai/gpt-oss-120b:free",
+    # Fast tier — tried first every time (not shuffled)
     "openai/gpt-oss-20b:free",
-    # Large general models
-    "deepseek/deepseek-chat:free",
-    "deepseek/deepseek-r1-distill-llama-70b:free",
+    "openai/gpt-oss-120b:free",
     "meta-llama/llama-3.3-70b-instruct:free",
     "mistralai/mistral-small-3.1-24b-instruct:free",
+    "deepseek/deepseek-chat:free",
+    # Fallback pool — shuffled to spread rate-limit load
+    "qwen/qwen3-coder:free",
+    "qwen/qwen-2.5-coder-32b-instruct:free",
+    "deepseek/deepseek-r1-distill-llama-70b:free",
     "qwen/qwen3-next-80b-a3b-instruct:free",
     "arcee-ai/trinity-large-preview:free",
     "nousresearch/hermes-3-llama-3.1-405b:free",
     "z-ai/glm-4.5-air:free",
     "stepfun/step-3.5-flash:free",
-    # Mid-size models
     "google/gemma-3-27b-it:free",
     "google/gemma-3-12b-it:free",
     "microsoft/phi-4:free",
     "nvidia/nemotron-3-nano-30b-a3b:free",
     "arcee-ai/trinity-mini:free",
-    # Smaller / last-resort fallbacks
     "meta-llama/llama-3.1-8b-instruct:free",
     "nvidia/nemotron-nano-9b-v2:free",
     "qwen/qwen3-4b:free",
@@ -106,15 +104,17 @@ def review_code():
         last_error = None
         raw_text = None
 
-        # Shuffle so every request distributes load across models
-        shuffled_models = random.sample(FREE_MODELS, len(FREE_MODELS))
+        # Keep fast tier in order; shuffle only the fallback pool
+        fast_tier = FREE_MODELS[:5]
+        fallback_pool = random.sample(FREE_MODELS[5:], len(FREE_MODELS[5:]))
+        model_order = fast_tier + fallback_pool
 
-        for model_id in shuffled_models:
+        for model_id in model_order:
             try:
                 response = client.chat.completions.create(
                     model=model_id,
                     messages=[{"role": "user", "content": prompt}],
-                    timeout=30,
+                    timeout=20,
                 )
                 raw_text = response.choices[0].message.content.strip()
                 break
@@ -154,14 +154,22 @@ def review_code():
                         break
 
         if json_str is None:
-            # Fallback: try stripping a single outer code fence
             fence_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", raw_text)
             if fence_match:
                 json_str = fence_match.group(1).strip()
             else:
-                json_str = raw_text  # last resort
+                json_str = raw_text
 
-        result = json.loads(json_str)
+        # Fix invalid backslash escapes that appear when AI includes code in JSON
+        # e.g. \s \d \w in regex inside a JSON string → must be \\s \\d \\w
+        def fix_escapes(s):
+            return re.sub(r'\\(?!["\\/ bfnrtu])', r'\\\\', s)
+
+        try:
+            result = json.loads(json_str)
+        except json.JSONDecodeError:
+            result = json.loads(fix_escapes(json_str))
+
         return jsonify(result)
 
     except json.JSONDecodeError as e:
