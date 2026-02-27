@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CodeRefine – AI Code Debugger &amp; Reviewer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⚙️</span>
+        <span class="logo-text">Code<span class="accent">Refine</span></span>
+      </div>
+      <p class="tagline">AI-Powered Code Debugger &amp; Reviewer for Students &amp; Developers</p>
+    </div>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main class="container">
+
+    <!-- INPUT CARD -->
+    <section class="card input-card">
+      <div class="card-header">
+        <h2>📋 Paste Your Code</h2>
+        <div class="lang-wrapper">
+          <label for="language">Language:</label>
+          <select id="language">
+            <option>Python</option>
+            <option>JavaScript</option>
+            <option>Java</option>
+            <option>C</option>
+            <option>C++</option>
+            <option>C#</option>
+            <option>TypeScript</option>
+            <option>Go</option>
+            <option>Rust</option>
+            <option>PHP</option>
+            <option>Ruby</option>
+            <option>Swift</option>
+            <option>Kotlin</option>
+            <option>SQL</option>
+            <option>HTML</option>
+            <option>CSS</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="editor-wrapper">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea
+          id="codeInput"
+          placeholder="// Paste your code here and press Ctrl+Enter or click 'Debug &amp; Review'..."
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <div class="input-footer">
+        <span id="charCount" class="char-count">0 / 5000 chars</span>
+        <div class="btn-group">
+          <button id="clearBtn" class="btn btn-secondary">🗑 Clear</button>
+          <button id="reviewBtn" class="btn btn-primary">
+            <span id="btnText">🐛 Debug &amp; Review</span>
+            <span id="btnSpinner" class="spinner hidden"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS SECTION (hidden until review) -->
+    <section id="resultsSection" class="hidden">
+
+      <!-- SCORE BANNER -->
+      <div id="scoreBanner" class="score-banner">
+        <div class="score-left">
+          <span class="score-label">Code Quality Score</span>
+          <span id="scoreValue" class="score-value">—</span>
+        </div>
+        <div class="score-bar-wrap">
+          <div id="scoreBar" class="score-bar"></div>
+        </div>
+      </div>
+
+      <!-- ISSUES -->
+      <div class="card results-card" id="issuesCard">
+        <div class="card-header">
+          <h2>🔍 Bugs &amp; Issues Found</h2>
+          <span id="issueCount" class="badge">0</span>
+        </div>
+        <div id="issuesList" class="issues-list">
+          <p class="no-issues">No issues found – great code! 🎉</p>
+        </div>
+      </div>
+
+      <!-- IMPROVED CODE -->
+      <div class="card results-card">
+        <div class="card-header">
+          <h2>🚀 Improved Code</h2>
+          <div class="btn-group">
+            <button id="downloadBtn" class="btn btn-secondary btn-sm">⬇️ Download</button>
+            <button id="copyBtn" class="btn btn-secondary btn-sm">📋 Copy</button>
+          </div>
+        </div>
+        <div class="code-block-wrapper">
+          <pre><code id="improvedCode" class="language-auto"></code></pre>
+        </div>
+      </div>
+
+      <!-- EXPLANATION -->
+      <div class="card results-card explanation-card">
+        <div class="card-header">
+          <h2>💡 Explanation</h2>
+        </div>
+        <p id="explanationText" class="explanation-text"></p>
+      </div>
+
+    </section>
+
+    <!-- ERROR BANNER -->
+    <div id="errorBanner" class="error-banner hidden">
+      <span>⚠️</span> <span id="errorMsg"></span>
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer">
+    <p>CodeRefine &copy; 2026 &nbsp;|&nbsp; Powered by Gemini AI &nbsp;|&nbsp; Built with Flask</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
